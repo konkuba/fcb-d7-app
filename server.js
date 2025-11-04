@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
@@ -13,21 +12,26 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'fcb-d7-secret-key-2024';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT;
 
-// Trust proxy für Railway/Render/etc.
-app.set('trust proxy', 1);
+// Trust proxy - WICHTIG für Railway!
+app.set('trust proxy', true);
 
 // Datenbank-Verbindung
-const db = new sqlite3.Database(process.env.DATABASE_URL || './fcb_d7.db', (err) => {
+const dbPath = process.env.DATABASE_URL || './fcb_d7.db';
+console.log(`📁 Datenbank-Pfad: ${dbPath}`);
+
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
-        console.error('Datenbankverbindung fehlgeschlagen:', err);
+        console.error('❌ Datenbankverbindung fehlgeschlagen:', err);
+        process.exit(1);
     } else {
-        console.log('Mit SQLite-Datenbank verbunden');
+        console.log('✅ Mit SQLite-Datenbank verbunden');
         initDatabase();
     }
 });
 
-// Middleware
+// Middleware - Helmet mit korrekter CSP für Railway
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -35,26 +39,28 @@ app.use(helmet({
             scriptSrc: ["'self'", "'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'"]
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'", "data:"],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'none'"]
         }
-    }
+    },
+    crossOriginEmbedderPolicy: false
 }));
+
 app.use(compression());
 app.use(cors({
     origin: '*',
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from root directory
+// Serve static files
 app.use(express.static(__dirname));
-
-// Rate Limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100
-});
-app.use('/api/', limiter);
 
 // Hauptseite
 app.get('/', (req, res) => {
@@ -73,7 +79,10 @@ function initDatabase() {
         player_id INTEGER,
         phone TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
+    )`, (err) => {
+        if (err) console.error('❌ Users Tabelle:', err);
+        else console.log('✅ Users Tabelle bereit');
+    });
 
     // Players Tabelle
     db.run(`CREATE TABLE IF NOT EXISTS players (
@@ -84,7 +93,10 @@ function initDatabase() {
         position TEXT,
         status TEXT DEFAULT 'active',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
+    )`, (err) => {
+        if (err) console.error('❌ Players Tabelle:', err);
+        else console.log('✅ Players Tabelle bereit');
+    });
 
     // Events Tabelle
     db.run(`CREATE TABLE IF NOT EXISTS events (
@@ -101,7 +113,10 @@ function initDatabase() {
         created_by INTEGER,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (created_by) REFERENCES users(id)
-    )`);
+    )`, (err) => {
+        if (err) console.error('❌ Events Tabelle:', err);
+        else console.log('✅ Events Tabelle bereit');
+    });
 
     // Confirmations Tabelle
     db.run(`CREATE TABLE IF NOT EXISTS confirmations (
@@ -116,7 +131,10 @@ function initDatabase() {
         FOREIGN KEY (player_id) REFERENCES players(id),
         FOREIGN KEY (user_id) REFERENCES users(id),
         UNIQUE(event_id, player_id)
-    )`);
+    )`, (err) => {
+        if (err) console.error('❌ Confirmations Tabelle:', err);
+        else console.log('✅ Confirmations Tabelle bereit');
+    });
 
     // Messages Tabelle
     db.run(`CREATE TABLE IF NOT EXISTS messages (
@@ -129,7 +147,10 @@ function initDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (sender_id) REFERENCES users(id),
         FOREIGN KEY (event_id) REFERENCES events(id)
-    )`);
+    )`, (err) => {
+        if (err) console.error('❌ Messages Tabelle:', err);
+        else console.log('✅ Messages Tabelle bereit');
+    });
 
     // News Tabelle
     db.run(`CREATE TABLE IF NOT EXISTS news (
@@ -140,7 +161,10 @@ function initDatabase() {
         published BOOLEAN DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (author_id) REFERENCES users(id)
-    )`);
+    )`, (err) => {
+        if (err) console.error('❌ News Tabelle:', err);
+        else console.log('✅ News Tabelle bereit');
+    });
 }
 
 // JWT Middleware
@@ -549,14 +573,12 @@ app.post('/api/news', authenticateToken, requireTrainer, [
 app.get('/api/stats', authenticateToken, (req, res) => {
     const stats = {};
 
-    // Spieler zählen
     db.get(`SELECT COUNT(*) as total FROM players WHERE status = 'active'`, (err, row) => {
         if (err) {
             return res.status(500).json({ error: 'Fehler beim Abrufen der Statistiken' });
         }
         stats.totalPlayers = row.total;
 
-        // Nächstes Event
         db.get(
             `SELECT * FROM events WHERE date >= date('now') ORDER BY date ASC, time ASC LIMIT 1`,
             (err, event) => {
@@ -565,7 +587,6 @@ app.get('/api/stats', authenticateToken, (req, res) => {
                 }
                 stats.nextEvent = event;
 
-                // Anwesenheit beim nächsten Event
                 if (event) {
                     db.get(
                         `SELECT 
@@ -593,26 +614,42 @@ app.get('/api/stats', authenticateToken, (req, res) => {
 // ==================== HEALTH CHECK ====================
 
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        port: PORT,
+        environment: IS_PRODUCTION ? 'production' : 'development',
+        database: 'connected'
+    });
 });
 
 // ==================== SERVER START ====================
 
-app.listen(PORT, () => {
-    console.log(`Server läuft auf Port ${PORT}`);
-    console.log(`API verfügbar unter http://localhost:${PORT}/api`);
+// Server starten - auf 0.0.0.0 für Railway!
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log('='.repeat(60));
+    console.log('🚀 FC Büsingen D7 - Team Management App');
+    console.log('='.repeat(60));
+    console.log(`✅ Server läuft auf Port ${PORT}`);
+    console.log(`✅ Umgebung: ${IS_PRODUCTION ? 'PRODUCTION (Railway)' : 'Development'}`);
+    console.log(`✅ API verfügbar unter: /api`);
+    console.log(`✅ Health Check: /api/health`);
+    console.log('='.repeat(60));
 });
 
 // Graceful Shutdown
 process.on('SIGTERM', () => {
-    console.log('SIGTERM empfangen. Server wird heruntergefahren...');
-    db.close((err) => {
-        if (err) {
-            console.error('Fehler beim Schließen der Datenbank:', err);
-        } else {
-            console.log('Datenbankverbindung geschlossen.');
-        }
-        process.exit(0);
+    console.log('⚠️  SIGTERM empfangen. Server wird heruntergefahren...');
+    server.close(() => {
+        db.close((err) => {
+            if (err) {
+                console.error('❌ Fehler beim Schließen der Datenbank:', err);
+                process.exit(1);
+            } else {
+                console.log('✅ Datenbankverbindung geschlossen.');
+                process.exit(0);
+            }
+        });
     });
 });
 
