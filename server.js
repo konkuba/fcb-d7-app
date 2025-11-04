@@ -25,7 +25,17 @@ const db = new sqlite3.Database(process.env.DATABASE_URL || './fcb_d7.db', (err)
 });
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"]
+        }
+    }
+}));
 app.use(compression());
 app.use(cors({
     origin: '*',
