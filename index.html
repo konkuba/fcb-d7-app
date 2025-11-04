@@ -3,7 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FC Büsingen D7</title>
+    <title>FC Büsingen D7 - Login</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1a365d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FCB D7">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-72x72.png">
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -85,6 +100,19 @@
     </div>
     
     <script>
+        // Service Worker registrieren
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registriert');
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker Registrierung fehlgeschlagen:', error);
+                    });
+            });
+        }
+
         async function setupAll() {
             const log = document.getElementById('setupLog');
             log.innerHTML = 'Starte Setup...';
@@ -154,11 +182,15 @@
                         <div class="status">
                             ✅ Login erfolgreich!<br>
                             Willkommen, ${data.user.name}!<br>
-                            Rolle: ${data.user.role}<br><br>
-                            <strong>Die vollständige App kommt als nächstes...</strong>
+                            Weiterleitung zur App...
                         </div>`;
                     localStorage.setItem('fcb_token', data.token);
                     localStorage.setItem('fcb_user', JSON.stringify(data.user));
+                    
+                    // Weiterleitung zur App
+                    setTimeout(() => {
+                        window.location.href = '/app.html';
+                    }, 1000);
                 } else {
                     resultDiv.innerHTML = `<div class="status error">❌ Login fehlgeschlagen: ${data.error || 'Unbekannter Fehler'}</div>`;
                 }
