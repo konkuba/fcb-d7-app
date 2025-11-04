@@ -27,21 +27,26 @@ const db = new sqlite3.Database(process.env.DATABASE_URL || './fcb_d7.db', (err)
 // Middleware
 app.use(helmet());
 app.use(compression());
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    credentials: true
+}));
 app.use(express.json());
-app.use(express.static('public'));
 
-// Hauptseite Route
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// Serve static files from root directory
+app.use(express.static(__dirname));
 
 // Rate Limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 Minuten
-    max: 100 // Max 100 Requests pro IP
+    windowMs: 15 * 60 * 1000,
+    max: 100
 });
 app.use('/api/', limiter);
+
+// Hauptseite
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Datenbank initialisieren
 function initDatabase() {
