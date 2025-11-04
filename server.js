@@ -14,6 +14,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'fcb-d7-secret-key-2024';
 
+// Trust proxy für Railway/Render/etc.
+app.set('trust proxy', 1);
+
 // Datenbank-Verbindung
 const db = new sqlite3.Database(process.env.DATABASE_URL || './fcb_d7.db', (err) => {
     if (err) {
