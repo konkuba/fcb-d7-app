@@ -28,6 +28,10 @@
             border-radius: 5px; 
             margin: 20px 0;
         }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
         button {
             background: #1a365d;
             color: white;
@@ -36,8 +40,22 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            margin: 5px;
         }
         button:hover { background: #2c5282; }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .setup-box {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -45,60 +63,115 @@
         <h1>🚀 FC Büsingen D7 - Team App</h1>
         <div class="status">✅ Server läuft! API ist erreichbar!</div>
         
-        <h2>Quick Test:</h2>
-        <button onclick="testAPI()">API Testen</button>
+        <div class="setup-box">
+            <h2>🔧 Einmalige Einrichtung:</h2>
+            <p>Klicke diese Buttons der Reihe nach:</p>
+            <button onclick="setupAll()">Alles automatisch einrichten</button>
+            <div id="setupLog" style="margin-top: 10px;"></div>
+        </div>
         
-        <div id="result" style="margin-top: 20px;"></div>
-        
-        <h2>Login Test:</h2>
-        <input type="email" id="email" placeholder="stephan@fcbuesingen.ch" value="stephan@fcbuesingen.ch" style="width: 100%; padding: 10px; margin: 5px 0;">
-        <input type="password" id="password" placeholder="fcb2024" value="fcb2024" style="width: 100%; padding: 10px; margin: 5px 0;">
-        <button onclick="login()">Login</button>
+        <h2>📱 Login:</h2>
+        <input type="email" id="email" placeholder="E-Mail" value="stephan@fcbuesingen.ch">
+        <input type="password" id="password" placeholder="Passwort" value="fcb2024">
+        <button onclick="login()">Einloggen</button>
         
         <div id="loginResult" style="margin-top: 20px;"></div>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <h3>Test-Accounts:</h3>
+            <p>Trainer: stephan@fcbuesingen.ch / fcb2024</p>
+            <p>Eltern: mueller@example.com / test123</p>
+        </div>
     </div>
     
     <script>
-        function testAPI() {
-            fetch('/api/health')
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('result').innerHTML = 
-                        '<div style="background: #d1fae5; padding: 10px; border-radius: 5px;">✅ API funktioniert: ' + JSON.stringify(data) + '</div>';
-                })
-                .catch(err => {
-                    document.getElementById('result').innerHTML = 
-                        '<div style="background: #fee2e2; padding: 10px; border-radius: 5px;">❌ Fehler: ' + err + '</div>';
+        async function setupAll() {
+            const log = document.getElementById('setupLog');
+            log.innerHTML = 'Starte Setup...';
+            
+            // 1. Trainer erstellen
+            try {
+                let response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'stephan@fcbuesingen.ch',
+                        password: 'fcb2024',
+                        name: 'Stephan Ott',
+                        role: 'trainer'
+                    })
                 });
+                let data = await response.json();
+                if (response.ok || data.error?.includes('bereits')) {
+                    log.innerHTML += '<br>✅ Trainer-Account OK';
+                } else {
+                    log.innerHTML += '<br>⚠️ Trainer: ' + data.error;
+                }
+            } catch (err) {
+                log.innerHTML += '<br>❌ Fehler beim Trainer: ' + err;
+            }
+            
+            // 2. Eltern erstellen
+            try {
+                let response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'mueller@example.com',
+                        password: 'test123',
+                        name: 'Familie Müller',
+                        role: 'parent'
+                    })
+                });
+                let data = await response.json();
+                if (response.ok || data.error?.includes('bereits')) {
+                    log.innerHTML += '<br>✅ Eltern-Account OK';
+                } else {
+                    log.innerHTML += '<br>⚠️ Eltern: ' + data.error;
+                }
+            } catch (err) {
+                log.innerHTML += '<br>❌ Fehler bei Eltern: ' + err;
+            }
+            
+            log.innerHTML += '<br><br><strong>✅ Setup abgeschlossen! Du kannst dich jetzt einloggen.</strong>';
         }
         
-        function login() {
+        async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
             
-            fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            })
-            .then(r => r.json())
-            .then(data => {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                
                 if (data.token) {
-                    document.getElementById('loginResult').innerHTML = 
-                        '<div style="background: #d1fae5; padding: 10px; border-radius: 5px;">✅ Login erfolgreich! Token: ' + data.token.substring(0, 20) + '...</div>';
+                    resultDiv.innerHTML = `
+                        <div class="status">
+                            ✅ Login erfolgreich!<br>
+                            Willkommen, ${data.user.name}!<br>
+                            Rolle: ${data.user.role}<br><br>
+                            <strong>Die vollständige App kommt als nächstes...</strong>
+                        </div>`;
+                    localStorage.setItem('fcb_token', data.token);
+                    localStorage.setItem('fcb_user', JSON.stringify(data.user));
                 } else {
-                    document.getElementById('loginResult').innerHTML = 
-                        '<div style="background: #fee2e2; padding: 10px; border-radius: 5px;">❌ Login fehlgeschlagen: ' + (data.error || 'Unbekannter Fehler') + '</div>';
+                    resultDiv.innerHTML = `<div class="status error">❌ Login fehlgeschlagen: ${data.error || 'Unbekannter Fehler'}</div>`;
                 }
-            })
-            .catch(err => {
-                document.getElementById('loginResult').innerHTML = 
-                    '<div style="background: #fee2e2; padding: 10px; border-radius: 5px;">❌ Fehler: ' + err + '</div>';
-            });
+            } catch (err) {
+                resultDiv.innerHTML = `<div class="status error">❌ Fehler: ${err}</div>`;
+            }
         }
         
-        // Auto-test on load
-        setTimeout(testAPI, 1000);
+        // API Test beim Laden
+        fetch('/api/health')
+            .then(r => r.json())
+            .then(data => console.log('API Check:', data))
+            .catch(err => console.error('API Fehler:', err));
     </script>
 </body>
 </html>
