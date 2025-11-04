@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FC Büsingen D7 - Team App</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1a365d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        #app {
+            min-height: 100vh;
+        }
+
+        /* Container */
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .app-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            color: #1a365d;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            color: #1a365d;
+            font-weight: 500;
+        }
+
+        .btn-logout {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-logout:hover {
+            background: #b91c1c;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #4a5568;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+
+        .nav-tab:hover {
+            background: #e2e8f0;
+        }
+
+        .nav-tab.active {
+            background: #1a365d;
+            color: white;
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 20px;
+            color: #1a365d;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        /* Events */
+        .event-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .event-item {
+            background: white;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .event-item.training {
+            border-left-color: #10b981;
+        }
+
+        .event-item.match {
+            border-left-color: #ef4444;
+        }
+
+        .event-item.tournament {
+            border-left-color: #f59e0b;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .event-type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .event-type-badge.training {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .event-type-badge.match {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .event-type-badge.tournament {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .event-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a365d;
+            margin: 5px 0;
+        }
+
+        .event-details {
+            color: #64748b;
+            font-size: 14px;
+            display: grid;
+            gap: 5px;
+        }
+
+        .event-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .event-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .event-stat.confirmed {
+            color: #10b981;
+        }
+
+        .event-stat.declined {
+            color: #ef4444;
+        }
+
+        .event-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #1a365d;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2c5282;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #1a365d;
+            font-weight: 500;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #1a365d;
+            font-weight: 600;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .btn-close:hover {
+            color: #1a365d;
+        }
+
+        /* Confirmation Status */
+        .confirmation-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .confirmation-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .confirmation-option:hover {
+            border-color: #cbd5e1;
+        }
+
+        .confirmation-option.selected {
+            border-color: #1a365d;
+            background: #f0f4ff;
+        }
+
+        .confirmation-option.confirmed.selected {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .confirmation-option.declined.selected {
+            border-color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .confirmation-option.maybe.selected {
+            border-color: #f59e0b;
+            background: #fef3c7;
+        }
+
+        /* Players List */
+        .players-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .player-item {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .player-number {
+            width: 40px;
+            height: 40px;
+            background: #1a365d;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .player-name {
+            font-weight: 500;
+            color: #1a365d;
+        }
+
+        /* Messages */
+        .message-item {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .message-subject {
+            font-weight: 600;
+            color: #1a365d;
+        }
+
+        .message-date {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .message-content {
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        /* Stats Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1a365d;
+        }
+
+        .stat-label {
+            color: #64748b;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #1a365d;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 10px;
+            }
+
+            .app-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .nav-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+
+            .event-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .event-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* Alert */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading">Lade App...</div>
+    </div>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        // API Helper
+        const API_URL = window.location.origin + '/api';
+
+        const api = {
+            async request(endpoint, options = {}) {
+                const token = localStorage.getItem('fcb_token');
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` }),
+                    ...options.headers,
+                };
+
+                try {
+                    const response = await fetch(`${API_URL}${endpoint}`, {
+                        ...options,
+                        headers,
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Ein Fehler ist aufgetreten');
+                    return data;
+                } catch (error) {
+                    throw error;
+                }
+            },
+
+            // Auth
+            async login(email, password) {
+                return this.request('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password }),
+                });
+            },
+
+            // Events
+            async getEvents() {
+                return this.request('/events');
+            },
+
+            async createEvent(eventData) {
+                return this.request('/events', {
+                    method: 'POST',
+                    body: JSON.stringify(eventData),
+                });
+            },
+
+            async updateEvent(id, eventData) {
+                return this.request(`/events/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(eventData),
+                });
+            },
+
+            async deleteEvent(id) {
+                return this.request(`/events/${id}`, {
+                    method: 'DELETE',
+                });
+            },
+
+            // Confirmations
+            async confirmEvent(eventId, playerId, status, comment) {
+                return this.request(`/events/${eventId}/confirmation`, {
+                    method: 'POST',
+                    body: JSON.stringify({ player_id: playerId, status, comment }),
+                });
+            },
+
+            async getConfirmations(eventId) {
+                return this.request(`/events/${eventId}/confirmations`);
+            },
+
+            // Players
+            async getPlayers() {
+                return this.request('/players');
+            },
+
+            async createPlayer(playerData) {
+                return this.request('/players', {
+                    method: 'POST',
+                    body: JSON.stringify(playerData),
+                });
+            },
+
+            // Messages
+            async getMessages() {
+                return this.request('/messages');
+            },
+
+            async sendMessage(messageData) {
+                return this.request('/messages', {
+                    method: 'POST',
+                    body: JSON.stringify(messageData),
+                });
+            },
+
+            // Stats
+            async getStats() {
+                return this.request('/stats');
+            },
+        };
+
+        // Helper Functions
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            return new Intl.DateTimeFormat('de-DE', {
+                weekday: 'short',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+            }).format(date);
+        };
+
+        const formatTime = (timeString) => {
+            return timeString ? timeString.substring(0, 5) : '';
+        };
+
+        const getEventTypeLabel = (type) => {
+            const labels = {
+                training: 'Training',
+                match: 'Spiel',
+                tournament: 'Turnier',
+                other: 'Sonstiges',
+            };
+            return labels[type] || type;
+        };
+
+        // Components
+        function Header({ user, onLogout }) {
+            return (
+                <div className="app-header">
+                    <div className="app-title">
+                        🚀 FC Büsingen D7
+                    </div>
+                    <div className="user-info">
+                        <span className="user-name">
+                            {user.name} ({user.role === 'trainer' ? 'Trainer' : 'Eltern'})
+                        </span>
+                        <button className="btn-logout" onClick={onLogout}>
+                            Abmelden
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        function EventCard({ event, user, players, onConfirm, onEdit, onDelete, onViewDetails }) {
+            const [showConfirmation, setShowConfirmation] = useState(false);
+
+            return (
+                <div className={`event-item ${event.type}`}>
+                    <div className="event-header">
+                        <div>
+                            <span className={`event-type-badge ${event.type}`}>
+                                {getEventTypeLabel(event.type)}
+                            </span>
+                            <div className="event-title">{event.title}</div>
+                        </div>
+                    </div>
+                    
+                    <div className="event-details">
+                        <div className="event-detail-item">
+                            📅 {formatDate(event.date)} um {formatTime(event.time)} Uhr
+                        </div>
+                        <div className="event-detail-item">
+                            📍 {event.location}
+                        </div>
+                        {event.opponent && (
+                            <div className="event-detail-item">
+                                ⚽ Gegner: {event.opponent}
+                            </div>
+                        )}
+                        {event.description && (
+                            <div className="event-detail-item">
+                                ℹ️ {event.description}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="event-stats">
+                        <div className="event-stat confirmed">
+                            ✅ {event.confirmed_count || 0} zugesagt
+                        </div>
+                        <div className="event-stat declined">
+                            ❌ {event.declined_count || 0} abgesagt
+                        </div>
+                    </div>
+
+                    <div className="event-actions">
+                        {user.role === 'parent' && (
+                            <button 
+                                className="btn btn-success btn-small"
+                                onClick={() => setShowConfirmation(true)}
+                            >
+                                An-/Abmelden
+                            </button>
+                        )}
+                        {user.role === 'trainer' && (
+                            <>
+                                <button 
+                                    className="btn btn-primary btn-small"
+                                    onClick={() => onViewDetails(event)}
+                                >
+                                    Details
+                                </button>
+                                <button 
+                                    className="btn btn-warning btn-small"
+                                    onClick={() => onEdit(event)}
+                                >
+                                    Bearbeiten
+                                </button>
+                                <button 
+                                    className="btn btn-danger btn-small"
+                                    onClick={() => onDelete(event.id)}
+                                >
+                                    Löschen
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    {showConfirmation && (
+                        <ConfirmationModal
+                            event={event}
+                            players={players}
+                            userId={user.id}
+                            userPlayerId={user.player_id}
+                            onClose={() => setShowConfirmation(false)}
+                            onConfirm={onConfirm}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        function ConfirmationModal({ event, players, userId, userPlayerId, onClose, onConfirm }) {
+            const [selectedPlayer, setSelectedPlayer] = useState(userPlayerId || '');
+            const [status, setStatus] = useState('confirmed');
+            const [comment, setComment] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!selectedPlayer) {
+                    alert('Bitte wähle einen Spieler aus');
+                    return;
+                }
+                
+                setLoading(true);
+                try {
+                    await onConfirm(event.id, selectedPlayer, status, comment);
+                    onClose();
+                } catch (error) {
+                    alert(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">An-/Abmeldung</h2>
+                            <button className="btn-close" onClick={onClose}>×</button>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label className="form-label">Spieler</label>
+                                <select 
+                                    className="form-select"
+                                    value={selectedPlayer}
+                                    onChange={(e) => setSelectedPlayer(e.target.value)}
+                                    required
+                                >
+                                    <option value="">Spieler auswählen</option>
+                                    {players.map(player => (
+                                        <option key={player.id} value={player.id}>
+                                            {player.name} (#{player.number})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Status</label>
+                                <div className="confirmation-selector">
+                                    <div 
+                                        className={`confirmation-option confirmed ${status === 'confirmed' ? 'selected' : ''}`}
+                                        onClick={() => setStatus('confirmed')}
+                                    >
+                                        <div>✅</div>
+                                        <div>Zusagen</div>
+                                    </div>
+                                    <div 
+                                        className={`confirmation-option declined ${status === 'declined' ? 'selected' : ''}`}
+                                        onClick={() => setStatus('declined')}
+                                    >
+                                        <div>❌</div>
+                                        <div>Absagen</div>
+                                    </div>
+                                    <div 
+                                        className={`confirmation-option maybe ${status === 'maybe' ? 'selected' : ''}`}
+                                        onClick={() => setStatus('maybe')}
+                                    >
+                                        <div>❓</div>
+                                        <div>Vielleicht</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Kommentar (optional)</label>
+                                <textarea 
+                                    className="form-textarea"
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    placeholder="z.B. Komme später..."
+                                />
+                            </div>
+
+                            <button type="submit" className="btn btn-primary" disabled={loading}>
+                                {loading ? 'Speichere...' : 'Bestätigen'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        function EventFormModal({ event, onClose, onSave }) {
+            const [formData, setFormData] = useState(event || {
+                type: 'training',
+                title: '',
+                description: '',
+                date: '',
+                time: '',
+                end_time: '',
+                location: '',
+                opponent: '',
+            });
+            const [loading, setLoading] = useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                try {
+                    await onSave(formData);
+                    onClose();
+                } catch (error) {
+                    alert(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleChange = (e) => {
+                setFormData({
+                    ...formData,
+                    [e.target.name]: e.target.value,
+                });
+            };
+
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">
+                                {event ? 'Termin bearbeiten' : 'Neuer Termin'}
+                            </h2>
+                            <button className="btn-close" onClick={onClose}>×</button>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label className="form-label">Art</label>
+                                <select 
+                                    className="form-select"
+                                    name="type"
+                                    value={formData.type}
+                                    onChange={handleChange}
+                                    required
+                                >
+                                    <option value="training">Training</option>
+                                    <option value="match">Spiel</option>
+                                    <option value="tournament">Turnier</option>
+                                    <option value="other">Sonstiges</option>
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Titel</label>
+                                <input 
+                                    type="text"
+                                    className="form-input"
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Beschreibung</label>
+                                <textarea 
+                                    className="form-textarea"
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Datum</label>
+                                <input 
+                                    type="date"
+                                    className="form-input"
+                                    name="date"
+                                    value={formData.date}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Uhrzeit</label>
+                                <input 
+                                    type="time"
+                                    className="form-input"
+                                    name="time"
+                                    value={formData.time}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Ende (optional)</label>
+                                <input 
+                                    type="time"
+                                    className="form-input"
+                                    name="end_time"
+                                    value={formData.end_time || ''}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Ort</label>
+                                <input 
+                                    type="text"
+                                    className="form-input"
+                                    name="location"
+                                    value={formData.location}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+
+                            {formData.type === 'match' && (
+                                <div className="form-group">
+                                    <label className="form-label">Gegner</label>
+                                    <input 
+                                        type="text"
+                                        className="form-input"
+                                        name="opponent"
+                                        value={formData.opponent || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            )}
+
+                            <button type="submit" className="btn btn-primary" disabled={loading}>
+                                {loading ? 'Speichere...' : 'Speichern'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        function EventDetailsModal({ event, confirmations, onClose }) {
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">Anmeldungen</h2>
+                            <button className="btn-close" onClick={onClose}>×</button>
+                        </div>
+
+                        <div className="card-title">{event.title}</div>
+                        <div style={{ marginBottom: '20px', color: '#64748b' }}>
+                            {formatDate(event.date)} um {formatTime(event.time)} Uhr
+                        </div>
+
+                        <div className="stats-grid" style={{ marginBottom: '20px' }}>
+                            <div className="stat-card">
+                                <div className="stat-value" style={{ color: '#10b981' }}>
+                                    {confirmations.filter(c => c.status === 'confirmed').length}
+                                </div>
+                                <div className="stat-label">Zusagen</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-value" style={{ color: '#ef4444' }}>
+                                    {confirmations.filter(c => c.status === 'declined').length}
+                                </div>
+                                <div className="stat-label">Absagen</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-value" style={{ color: '#f59e0b' }}>
+                                    {confirmations.filter(c => c.status === 'maybe').length}
+                                </div>
+                                <div className="stat-label">Vielleicht</div>
+                            </div>
+                        </div>
+
+                        {confirmations.length === 0 ? (
+                            <div className="empty-state">
+                                <div className="empty-state-icon">📋</div>
+                                <div>Noch keine Anmeldungen</div>
+                            </div>
+                        ) : (
+                            <div className="players-list">
+                                {confirmations.map(confirmation => (
+                                    <div key={confirmation.id} className="player-item">
+                                        <div className="player-info">
+                                            <div className="player-number">
+                                                {confirmation.player_number}
+                                            </div>
+                                            <div>
+                                                <div className="player-name">
+                                                    {confirmation.player_name}
+                                                </div>
+                                                {confirmation.comment && (
+                                                    <div style={{ fontSize: '12px', color: '#64748b' }}>
+                                                        {confirmation.comment}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            {confirmation.status === 'confirmed' && '✅'}
+                                            {confirmation.status === 'declined' && '❌'}
+                                            {confirmation.status === 'maybe' && '❓'}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function PlayersTab({ players, isTrainer, onAddPlayer }) {
+            const [showAddModal, setShowAddModal] = useState(false);
+
+            return (
+                <div className="card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h2 className="card-title">Spieler ({players.length})</h2>
+                        {isTrainer && (
+                            <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                                + Spieler hinzufügen
+                            </button>
+                        )}
+                    </div>
+
+                    {players.length === 0 ? (
+                        <div className="empty-state">
+                            <div className="empty-state-icon">👥</div>
+                            <div>Noch keine Spieler</div>
+                        </div>
+                    ) : (
+                        <div className="players-list">
+                            {players.map(player => (
+                                <div key={player.id} className="player-item">
+                                    <div className="player-info">
+                                        <div className="player-number">
+                                            {player.number}
+                                        </div>
+                                        <div>
+                                            <div className="player-name">{player.name}</div>
+                                            {player.position && (
+                                                <div style={{ fontSize: '12px', color: '#64748b' }}>
+                                                    {player.position}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {showAddModal && (
+                        <PlayerFormModal
+                            onClose={() => setShowAddModal(false)}
+                            onSave={onAddPlayer}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        function PlayerFormModal({ onClose, onSave }) {
+            const [formData, setFormData] = useState({
+                name: '',
+                number: '',
+                birth_date: '',
+                position: '',
+            });
+            const [loading, setLoading] = useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                try {
+                    await onSave(formData);
+                    onClose();
+                } catch (error) {
+                    alert(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleChange = (e) => {
+                setFormData({
+                    ...formData,
+                    [e.target.name]: e.target.value,
+                });
+            };
+
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">Neuer Spieler</h2>
+                            <button className="btn-close" onClick={onClose}>×</button>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label className="form-label">Name</label>
+                                <input 
+                                    type="text"
+                                    className="form-input"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Rückennummer</label>
+                                <input 
+                                    type="number"
+                                    className="form-input"
+                                    name="number"
+                                    value={formData.number}
+                                    onChange={handleChange}
+                                    min="1"
+                                    max="99"
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Geburtsdatum (optional)</label>
+                                <input 
+                                    type="date"
+                                    className="form-input"
+                                    name="birth_date"
+                                    value={formData.birth_date}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Position (optional)</label>
+                                <input 
+                                    type="text"
+                                    className="form-input"
+                                    name="position"
+                                    value={formData.position}
+                                    onChange={handleChange}
+                                    placeholder="z.B. Stürmer, Verteidiger..."
+                                />
+                            </div>
+
+                            <button type="submit" className="btn btn-primary" disabled={loading}>
+                                {loading ? 'Speichere...' : 'Spieler hinzufügen'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        function MessagesTab({ messages, isTrainer, onSendMessage }) {
+            const [showSendModal, setShowSendModal] = useState(false);
+
+            return (
+                <div className="card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h2 className="card-title">Nachrichten</h2>
+                        {isTrainer && (
+                            <button className="btn btn-primary" onClick={() => setShowSendModal(true)}>
+                                + Nachricht senden
+                            </button>
+                        )}
+                    </div>
+
+                    {messages.length === 0 ? (
+                        <div className="empty-state">
+                            <div className="empty-state-icon">💬</div>
+                            <div>Keine Nachrichten</div>
+                        </div>
+                    ) : (
+                        messages.map(message => (
+                            <div key={message.id} className="message-item">
+                                <div className="message-header">
+                                    <div className="message-subject">{message.subject}</div>
+                                    <div className="message-date">
+                                        {formatDate(message.created_at)}
+                                    </div>
+                                </div>
+                                <div className="message-content">{message.content}</div>
+                                <div style={{ marginTop: '10px', fontSize: '12px', color: '#64748b' }}>
+                                    Von: {message.sender_name}
+                                </div>
+                            </div>
+                        ))
+                    )}
+
+                    {showSendModal && (
+                        <MessageFormModal
+                            onClose={() => setShowSendModal(false)}
+                            onSend={onSendMessage}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        function MessageFormModal({ onClose, onSend }) {
+            const [formData, setFormData] = useState({
+                subject: '',
+                content: '',
+                recipient_type: 'all',
+            });
+            const [loading, setLoading] = useState(false);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                try {
+                    await onSend(formData);
+                    onClose();
+                } catch (error) {
+                    alert(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleChange = (e) => {
+                setFormData({
+                    ...formData,
+                    [e.target.name]: e.target.value,
+                });
+            };
+
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">Nachricht senden</h2>
+                            <button className="btn-close" onClick={onClose}>×</button>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label className="form-label">Empfänger</label>
+                                <select 
+                                    className="form-select"
+                                    name="recipient_type"
+                                    value={formData.recipient_type}
+                                    onChange={handleChange}
+                                >
+                                    <option value="all">Alle</option>
+                                    <option value="parents">Nur Eltern</option>
+                                    <option value="players">Nur Spieler</option>
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Betreff</label>
+                                <input 
+                                    type="text"
+                                    className="form-input"
+                                    name="subject"
+                                    value={formData.subject}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Nachricht</label>
+                                <textarea 
+                                    className="form-textarea"
+                                    name="content"
+                                    value={formData.content}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+
+                            <button type="submit" className="btn btn-primary" disabled={loading}>
+                                {loading ? 'Sende...' : 'Senden'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
+        function StatsTab({ stats }) {
+            if (!stats) {
+                return (
+                    <div className="card">
+                        <div className="loading">Lade Statistiken...</div>
+                    </div>
+                );
+            }
+
+            return (
+                <div>
+                    <div className="card">
+                        <h2 className="card-title">Team-Übersicht</h2>
+                        <div className="stats-grid">
+                            <div className="stat-card">
+                                <div className="stat-value">{stats.totalPlayers || 0}</div>
+                                <div className="stat-label">Aktive Spieler</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {stats.nextEvent && (
+                        <div className="card">
+                            <h2 className="card-title">Nächster Termin</h2>
+                            <div className="event-title" style={{ marginBottom: '10px' }}>
+                                {stats.nextEvent.title}
+                            </div>
+                            <div style={{ color: '#64748b', marginBottom: '15px' }}>
+                                {formatDate(stats.nextEvent.date)} um {formatTime(stats.nextEvent.time)} Uhr
+                            </div>
+                            {stats.nextEventAttendance && (
+                                <div className="stats-grid">
+                                    <div className="stat-card">
+                                        <div className="stat-value" style={{ color: '#10b981' }}>
+                                            {stats.nextEventAttendance.confirmed || 0}
+                                        </div>
+                                        <div className="stat-label">Zusagen</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-value" style={{ color: '#ef4444' }}>
+                                            {stats.nextEventAttendance.declined || 0}
+                                        </div>
+                                        <div className="stat-label">Absagen</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Main App
+        function App() {
+            const [user, setUser] = useState(null);
+            const [activeTab, setActiveTab] = useState('events');
+            const [events, setEvents] = useState([]);
+            const [players, setPlayers] = useState([]);
+            const [messages, setMessages] = useState([]);
+            const [stats, setStats] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [showEventForm, setShowEventForm] = useState(false);
+            const [editingEvent, setEditingEvent] = useState(null);
+            const [viewingEvent, setViewingEvent] = useState(null);
+            const [eventConfirmations, setEventConfirmations] = useState([]);
+
+            useEffect(() => {
+                const token = localStorage.getItem('fcb_token');
+                const storedUser = localStorage.getItem('fcb_user');
+                
+                if (token && storedUser) {
+                    setUser(JSON.parse(storedUser));
+                } else {
+                    window.location.href = '/';
+                }
+            }, []);
+
+            useEffect(() => {
+                if (user) {
+                    loadData();
+                }
+            }, [user]);
+
+            const loadData = async () => {
+                setLoading(true);
+                try {
+                    const [eventsData, playersData, messagesData, statsData] = await Promise.all([
+                        api.getEvents(),
+                        api.getPlayers(),
+                        api.getMessages(),
+                        api.getStats(),
+                    ]);
+
+                    setEvents(eventsData);
+                    setPlayers(playersData);
+                    setMessages(messagesData);
+                    setStats(statsData);
+                } catch (error) {
+                    console.error('Fehler beim Laden der Daten:', error);
+                    alert('Fehler beim Laden der Daten: ' + error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('fcb_token');
+                localStorage.removeItem('fcb_user');
+                window.location.href = '/';
+            };
+
+            const handleCreateEvent = async (eventData) => {
+                await api.createEvent(eventData);
+                await loadData();
+            };
+
+            const handleUpdateEvent = async (eventData) => {
+                await api.updateEvent(editingEvent.id, eventData);
+                setEditingEvent(null);
+                await loadData();
+            };
+
+            const handleDeleteEvent = async (eventId) => {
+                if (confirm('Möchtest du diesen Termin wirklich löschen?')) {
+                    await api.deleteEvent(eventId);
+                    await loadData();
+                }
+            };
+
+            const handleConfirmEvent = async (eventId, playerId, status, comment) => {
+                await api.confirmEvent(eventId, playerId, status, comment);
+                await loadData();
+            };
+
+            const handleViewEventDetails = async (event) => {
+                const confirmations = await api.getConfirmations(event.id);
+                setEventConfirmations(confirmations);
+                setViewingEvent(event);
+            };
+
+            const handleAddPlayer = async (playerData) => {
+                await api.createPlayer(playerData);
+                await loadData();
+            };
+
+            const handleSendMessage = async (messageData) => {
+                await api.sendMessage(messageData);
+                await loadData();
+            };
+
+            if (!user) {
+                return (
+                    <div className="loading">Lade...</div>
+                );
+            }
+
+            return (
+                <div className="app-container">
+                    <Header user={user} onLogout={handleLogout} />
+
+                    <div className="nav-tabs">
+                        <button 
+                            className={`nav-tab ${activeTab === 'events' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('events')}
+                        >
+                            📅 Termine
+                        </button>
+                        <button 
+                            className={`nav-tab ${activeTab === 'players' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('players')}
+                        >
+                            👥 Spieler
+                        </button>
+                        <button 
+                            className={`nav-tab ${activeTab === 'messages' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('messages')}
+                        >
+                            💬 Nachrichten
+                        </button>
+                        <button 
+                            className={`nav-tab ${activeTab === 'stats' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('stats')}
+                        >
+                            📊 Übersicht
+                        </button>
+                    </div>
+
+                    {loading ? (
+                        <div className="loading">Lade Daten...</div>
+                    ) : (
+                        <>
+                            {activeTab === 'events' && (
+                                <div className="card">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                        <h2 className="card-title">Termine</h2>
+                                        {user.role === 'trainer' && (
+                                            <button 
+                                                className="btn btn-primary"
+                                                onClick={() => setShowEventForm(true)}
+                                            >
+                                                + Neuer Termin
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {events.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="empty-state-icon">📅</div>
+                                            <div>Keine Termine vorhanden</div>
+                                        </div>
+                                    ) : (
+                                        <div className="event-list">
+                                            {events.map(event => (
+                                                <EventCard
+                                                    key={event.id}
+                                                    event={event}
+                                                    user={user}
+                                                    players={players}
+                                                    onConfirm={handleConfirmEvent}
+                                                    onEdit={(event) => {
+                                                        setEditingEvent(event);
+                                                        setShowEventForm(true);
+                                                    }}
+                                                    onDelete={handleDeleteEvent}
+                                                    onViewDetails={handleViewEventDetails}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'players' && (
+                                <PlayersTab
+                                    players={players}
+                                    isTrainer={user.role === 'trainer'}
+                                    onAddPlayer={handleAddPlayer}
+                                />
+                            )}
+
+                            {activeTab === 'messages' && (
+                                <MessagesTab
+                                    messages={messages}
+                                    isTrainer={user.role === 'trainer'}
+                                    onSendMessage={handleSendMessage}
+                                />
+                            )}
+
+                            {activeTab === 'stats' && (
+                                <StatsTab stats={stats} />
+                            )}
+                        </>
+                    )}
+
+                    {showEventForm && (
+                        <EventFormModal
+                            event={editingEvent}
+                            onClose={() => {
+                                setShowEventForm(false);
+                                setEditingEvent(null);
+                            }}
+                            onSave={editingEvent ? handleUpdateEvent : handleCreateEvent}
+                        />
+                    )}
+
+                    {viewingEvent && (
+                        <EventDetailsModal
+                            event={viewingEvent}
+                            confirmations={eventConfirmations}
+                            onClose={() => {
+                                setViewingEvent(null);
+                                setEventConfirmations([]);
+                            }}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        // Render App
+        ReactDOM.render(<App />, document.getElementById('app'));
+    </script>
+</body>
+</html>
