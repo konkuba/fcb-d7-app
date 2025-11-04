@@ -451,9 +451,7 @@
         const { useState, useEffect, useRef } = React;
         
         // API Configuration - Automatisch erkennen ob lokal oder production
-        const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3001/api'
-            : '/api';
+        const API_URL = '/api';
         
         // Icons als SVG-Komponenten
         const Icons = {
