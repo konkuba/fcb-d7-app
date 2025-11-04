@@ -31,21 +31,9 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-// Middleware - Helmet mit korrekter CSP für Railway
+// Middleware - Helmet OHNE CSP (damit Buttons funktionieren!)
 app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'"],
-            fontSrc: ["'self'", "data:"],
-            objectSrc: ["'none'"],
-            mediaSrc: ["'self'"],
-            frameSrc: ["'none'"]
-        }
-    },
+    contentSecurityPolicy: false,  // CSP komplett deaktiviert!
     crossOriginEmbedderPolicy: false
 }));
 
@@ -619,7 +607,8 @@ app.get('/api/health', (req, res) => {
         timestamp: new Date().toISOString(),
         port: PORT,
         environment: IS_PRODUCTION ? 'production' : 'development',
-        database: 'connected'
+        database: 'connected',
+        csp: 'disabled'
     });
 });
 
@@ -632,6 +621,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('='.repeat(60));
     console.log(`✅ Server läuft auf Port ${PORT}`);
     console.log(`✅ Umgebung: ${IS_PRODUCTION ? 'PRODUCTION (Railway)' : 'Development'}`);
+    console.log(`✅ CSP: DEAKTIVIERT (Buttons funktionieren!)`);
     console.log(`✅ API verfügbar unter: /api`);
     console.log(`✅ Health Check: /api/health`);
     console.log('='.repeat(60));
