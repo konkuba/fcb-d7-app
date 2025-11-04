@@ -31,6 +31,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// Hauptseite Route
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 Minuten
