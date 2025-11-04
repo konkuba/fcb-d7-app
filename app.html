@@ -4,10 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FC Büsingen D7 - Team App</title>
+    
+    <!-- PWA Meta Tags -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1a365d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FCB D7">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="/icons/icon-96x96.png">
+    <link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128x128.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="384x384" href="/icons/icon-384x384.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-72x72.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png">
+    
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileColor" content="#1a365d">
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
     <style>
         * {
             margin: 0;
@@ -571,6 +593,112 @@
             background: #dbeafe;
             color: #1e40af;
         }
+
+        /* PWA Install Button */
+        .pwa-install-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 54, 93, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: none;
+            align-items: center;
+            gap: 15px;
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+        }
+
+        .pwa-install-banner.show {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                bottom: -100px;
+                opacity: 0;
+            }
+            to {
+                bottom: 20px;
+                opacity: 1;
+            }
+        }
+
+        .pwa-install-banner button {
+            background: white;
+            color: #1a365d;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .pwa-install-banner button:hover {
+            background: #f0f4ff;
+        }
+
+        .pwa-install-banner .close-btn {
+            background: transparent;
+            color: white;
+            padding: 5px 10px;
+            font-size: 18px;
+        }
+
+        /* Offline Indicator */
+        .offline-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #dc2626;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            z-index: 3000;
+            display: none;
+        }
+
+        .offline-indicator.show {
+            display: block;
+        }
+
+        /* Update Banner */
+        .update-banner {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: none;
+            align-items: center;
+            gap: 15px;
+            z-index: 2000;
+        }
+
+        .update-banner.show {
+            display: flex;
+        }
+
+        .update-banner button {
+            background: white;
+            color: #10b981;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -578,9 +706,150 @@
         <div class="loading">Lade App...</div>
     </div>
 
+    <!-- Offline Indicator -->
+    <div class="offline-indicator" id="offlineIndicator">
+        📡 Keine Internetverbindung - Offline-Modus
+    </div>
+
+    <!-- Update Banner -->
+    <div class="update-banner" id="updateBanner">
+        <span>🎉 Update verfügbar!</span>
+        <button onclick="updateApp()">Aktualisieren</button>
+    </div>
+
+    <!-- PWA Install Banner -->
+    <div class="pwa-install-banner" id="installBanner">
+        <span>📱 Installiere die App auf deinem Homescreen!</span>
+        <button id="installBtn">Installieren</button>
+        <button class="close-btn" onclick="closeInstallBanner()">×</button>
+    </div>
+
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- PWA & Service Worker Registration -->
+    <script>
+        // Service Worker registrieren
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registriert:', registration.scope);
+
+                        // Check für Updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Neues Update verfügbar
+                                    document.getElementById('updateBanner').classList.add('show');
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.log('❌ Service Worker Registrierung fehlgeschlagen:', error);
+                    });
+
+                // Check ob bereits installiert
+                if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+                    console.log('✅ App läuft als PWA');
+                }
+            });
+        }
+
+        // Update App Funktion
+        function updateApp() {
+            navigator.serviceWorker.getRegistration().then((reg) => {
+                if (reg && reg.waiting) {
+                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                }
+            });
+            window.location.reload();
+        }
+
+        // Online/Offline Status
+        window.addEventListener('online', () => {
+            document.getElementById('offlineIndicator').classList.remove('show');
+            console.log('✅ Wieder online');
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('offlineIndicator').classList.add('show');
+            console.log('📡 Offline-Modus');
+        });
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('💾 Install Prompt verfügbar');
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Zeige Install-Banner nur wenn noch nicht installiert
+            if (!window.matchMedia('(display-mode: standalone)').matches) {
+                // Warte 5 Sekunden, dann zeige Banner
+                setTimeout(() => {
+                    if (!localStorage.getItem('installBannerClosed')) {
+                        document.getElementById('installBanner').classList.add('show');
+                    }
+                }, 5000);
+            }
+        });
+
+        // Install Button Handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (!deferredPrompt) {
+                        console.log('❌ Install Prompt nicht verfügbar');
+                        return;
+                    }
+
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
+                        console.log('✅ App wird installiert');
+                    } else {
+                        console.log('❌ Installation abgebrochen');
+                    }
+                    
+                    deferredPrompt = null;
+                    document.getElementById('installBanner').classList.remove('show');
+                });
+            }
+        });
+
+        function closeInstallBanner() {
+            document.getElementById('installBanner').classList.remove('show');
+            localStorage.setItem('installBannerClosed', 'true');
+        }
+
+        // iOS Safari Install-Hinweis
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.navigator.standalone;
+        
+        if (isIOS && !isStandalone) {
+            // Zeige iOS-spezifischen Hinweis nach 10 Sekunden
+            setTimeout(() => {
+                if (!localStorage.getItem('iosInstallHintShown')) {
+                    const banner = document.getElementById('installBanner');
+                    if (banner) {
+                        banner.querySelector('span').textContent = '📱 Tipp: Nutze "Zum Home-Bildschirm" im Teilen-Menü';
+                        banner.querySelector('#installBtn').style.display = 'none';
+                        banner.classList.add('show');
+                        localStorage.setItem('iosInstallHintShown', 'true');
+                    }
+                }
+            }, 10000);
+        }
+
+        console.log('🚀 PWA initialisiert');
+    </script>
 
     <script type="text/babel">
         const { useState, useEffect, useCallback } = React;
