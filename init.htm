@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Datenbank initialisieren</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d1fae5; }
+        .error { background: #fee2e2; }
+        button {
+            padding: 10px 20px;
+            background: #1a365d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>FC Büsingen D7 - Datenbank Setup</h1>
+    
+    <button onclick="createTrainer()">1. Trainer-Account erstellen</button>
+    <button onclick="createParent()">2. Eltern-Account erstellen</button>
+    <button onclick="createPlayers()">3. Spieler erstellen</button>
+    <button onclick="testLogin()">4. Login testen</button>
+    
+    <div id="logs"></div>
+    
+    <script>
+        function log(message, type = 'log') {
+            const logsDiv = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log ${type}`;
+            logEntry.innerHTML = `${new Date().toLocaleTimeString()}: ${message}`;
+            logsDiv.appendChild(logEntry);
+        }
+        
+        async function createTrainer() {
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'stephan@fcbuesingen.ch',
+                        password: 'fcb2024',
+                        name: 'Stephan Ott',
+                        role: 'trainer'
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    log('✅ Trainer-Account erstellt!', 'success');
+                    localStorage.setItem('trainer_token', data.token);
+                } else {
+                    log('❌ Fehler: ' + (data.error || JSON.stringify(data)), 'error');
+                }
+            } catch (err) {
+                log('❌ Fehler: ' + err, 'error');
+            }
+        }
+        
+        async function createParent() {
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'mueller@example.com',
+                        password: 'test123',
+                        name: 'Familie Müller',
+                        role: 'parent',
+                        player_id: 1
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    log('✅ Eltern-Account erstellt!', 'success');
+                } else {
+                    log('❌ Fehler: ' + (data.error || JSON.stringify(data)), 'error');
+                }
+            } catch (err) {
+                log('❌ Fehler: ' + err, 'error');
+            }
+        }
+        
+        async function createPlayers() {
+            const token = localStorage.getItem('trainer_token');
+            if (!token) {
+                log('⚠️ Bitte erst Trainer-Account erstellen!', 'error');
+                return;
+            }
+            
+            const players = [
+                { name: 'Max Müller', number: 7 },
+                { name: 'Leon Schmidt', number: 10 },
+                { name: 'Tim Wagner', number: 3 }
+            ];
+            
+            for (const player of players) {
+                try {
+                    const response = await fetch('/api/players', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify(player)
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        log(`✅ Spieler ${player.name} erstellt!`, 'success');
+                    } else {
+                        log(`❌ Fehler bei ${player.name}: ` + (data.error || JSON.stringify(data)), 'error');
+                    }
+                } catch (err) {
+                    log('❌ Fehler: ' + err, 'error');
+                }
+            }
+        }
+        
+        async function testLogin() {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'stephan@fcbuesingen.ch',
+                        password: 'fcb2024'
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    log('✅ Login erfolgreich! Token: ' + data.token.substring(0, 30) + '...', 'success');
+                    log('✅ Alles fertig! Du kannst jetzt zur <a href="/">Hauptseite</a> zurück', 'success');
+                } else {
+                    log('❌ Login fehlgeschlagen: ' + (data.error || JSON.stringify(data)), 'error');
+                }
+            } catch (err) {
+                log('❌ Fehler: ' + err, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
